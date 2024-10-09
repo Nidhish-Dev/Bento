@@ -2,26 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.head img{
+    height: 80px;
+    text-align: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.midLastText{
+    color: #636363;
+}
+.herosection{
+    justify-content: space-around;
+}
+.createBentoBtn{
+    background-color: #768cff;
+    border-radius: 14px;
+    justify-content: center;
+    width: 300px;
+    color: white;
+    padding: 16px 22px;
+    text-decoration: none;
+    transition: all .2s cubic-bezier(.532,.003,.094,.997);
+    display: flex;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+}
+.left img{
+    margin-top: 10px;
+    height: 380px;
+}
+.right img{
+    margin-top: 10px;
+    height: 500px;
+    
+}
+.right{
+margin-left: 120px;
+}
+.left{
+margin-right: 120px;
+}
+.signup{
+    justify-content: space-around;
+}
+.rightSignup img{
+    margin-top: 50px;
+height: 600px;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+.grabmylinkinput{
+    height: 40px;
+    background-color: #F7F7F7;
+    border-radius: 8px;
+}
+.grabmylinkbtn{
+    height: 50px;
+    align-items: center;
+    background-color: black;
+    color: white;
+    border-radius: 8px;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.linkItem img{
+    border-radius: 10px;
+    height: 45px;
+}
+
+.linkItem input{
+    height: 40px;
+    width: 250px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+}
+
+.copybtn{
+    width: 120px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 10px;
+    background: #000;
 }
