@@ -27,7 +27,7 @@ const SignupForm: React.FC = () => {
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace('http://localhost:3000/', ''); 
+        const value = e.target.value.replace('https://bento-server-liart.vercel.app/', ''); 
         setLink(value); 
     };
 
@@ -53,7 +53,7 @@ const SignupForm: React.FC = () => {
                                 className='grabmylinkinput w-full pl-4 pr-10 placeholder-gray-500' 
                                 type="text" 
                                 placeholder="Enter your unique link" 
-                                value={`http://localhost:3000/${link}`} 
+                                value={`https://bento-server-liart.vercel.app/${link}`} 
                                 onChange={handleLinkChange} 
                             />
                         </div>
@@ -79,7 +79,7 @@ const SignupForm: React.FC = () => {
                             />
                         </div>
 
-                        <p className='text-lg mt-4 font-light'>{`http://localhost:3000/${link}`} is yours!</p>
+                        <p className='text-lg mt-4 font-light'>{`https://bento-server-liart.vercel.app/${link}`} is yours!</p>
                         <p className='text-4xl font-bold'>Now, create your account.</p>
                         <form onSubmit={handleSubmit} className="mt-8">
                             {error && <p className="mt-4 text-red-500">{error}</p>} 
