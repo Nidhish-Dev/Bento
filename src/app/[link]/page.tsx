@@ -3,8 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveLinks, getLinks, getCurrentUser, SocialLinksWithOwner } from '@/utils/api'; 
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { IconClipboardCopy } from "@tabler/icons-react"; // Removed IconTableColumn import
-import { AxiosError } from 'axios';
+import { IconClipboardCopy, IconTableColumn } from "@tabler/icons-react";
 
 type SocialLinks = {
     instagram: string;
@@ -86,12 +85,17 @@ const LinkPage: React.FC<Params> = ({ params }) => {
             await saveLinks(data);
             setLinksSaved(true);
             setError('');
-        } catch (error: AxiosError | unknown) {  // Specify error type
+        } catch (error: any) {
             console.error('Error saving links:', error);
             setError('Failed to save links. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        router.push('/login');
     };
 
     const socialMediaUrls: { [key: string]: string } = {
@@ -153,12 +157,13 @@ const LinkPage: React.FC<Params> = ({ params }) => {
             ) : (
                 <div className='flex flex-col items-center'>
                      <div className="flex justify-center mb-10"> 
-                        <div className="head flex flex-col items-center">
-                            <img src="/logo.png" className="justify-center" alt="Logo" />
-                            <p className='text-2xl font-bold mt-3'>Bento</p>
-                        </div>
-                    </div>
+      <div className="head flex flex-col items-center">
+        <img src="/logo.png" className="justify-center" alt="Logo" />
+        <p className='text-2xl font-bold mt-3'>Bento</p>
+      </div>
+    </div>
                     <BentoGrid className="max-w-4xl mx-auto ">
+                        {/* Display user name in a BentoGridItem */}
                         <BentoGridItem
                             title={name}
                             header= {<Skeleton />}
@@ -176,6 +181,7 @@ const LinkPage: React.FC<Params> = ({ params }) => {
                         ))}
                     </BentoGrid>
 
+                    {/* Button to copy the current URL */}
                     <button
                         onClick={copyUrlToClipboard}
                         className=" copybtn  text-white  "
