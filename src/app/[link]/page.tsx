@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveLinks, getLinks, getCurrentUser, SocialLinksWithOwner } from '@/utils/api'; 
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { IconClipboardCopy, IconTableColumn } from "@tabler/icons-react";
+import { IconClipboardCopy } from "@tabler/icons-react";
 
 type SocialLinks = {
     instagram: string;
@@ -35,21 +35,39 @@ const LinkPage: React.FC<Params> = ({ params }) => {
     });
     const [name, setName] = useState<string>('');
     const [linksSaved, setLinksSaved] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
     const [error, setError] = useState<string>(''); 
     const [isSubmitting, setIsSubmitting] = useState(false); 
     const router = useRouter();
 
     useEffect(() => {
         const fetchUserDetails = async () => {
+            const token = localStorage.getItem('token'); // Check for the token
+            if (!token) {
+                router.push('/login'); // Redirect to login if no token
+                return;
+            }
+
             try {
                 const userDetails = await getCurrentUser();
-                setName(userDetails.name); // Set the name from user details
+                if (userDetails) {
+                    setName(userDetails.name);
+                    setIsOwner(userDetails.link === params.link);
+                }
             } catch (error) {
                 console.error('Error fetching user details:', error);
+                setError('Unauthorized access. Please log in.'); // Show error message
+                router.push('/login'); // Redirect to login on error
             }
         };
 
         const fetchLinks = async () => {
+            const token = localStorage.getItem('token'); // Check for the token
+            if (!token) {
+                router.push('/login'); // Redirect to login if no token
+                return;
+            }
+
             try {
                 const existingLinks: SocialLinksWithOwner | null = await getLinks(params.link);
                 setLinksSaved(!!existingLinks);
@@ -59,12 +77,13 @@ const LinkPage: React.FC<Params> = ({ params }) => {
                 }
             } catch (error) {
                 console.error('Error fetching links:', error);
+                setError('Failed to fetch links.'); // Show error message
             }
         };
 
-        fetchUserDetails(); // Fetch user details to get the name
-        fetchLinks(); // Fetch social links
-    }, [params.link]);
+        fetchUserDetails(); 
+        fetchLinks(); 
+    }, [params.link, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -109,64 +128,66 @@ const LinkPage: React.FC<Params> = ({ params }) => {
         x: 'https://twitter.com/',
     };
 
-    // Function to copy the current URL to the clipboard
     const copyUrlToClipboard = () => {
-        const currentUrl = window.location.href; // Get the current URL
-        navigator.clipboard.writeText(currentUrl) // Copy the URL to the clipboard
+        const currentUrl = window.location.href; 
+        navigator.clipboard.writeText(currentUrl)
             .then(() => {
-                alert('URL copied to clipboard!'); // Alert for successful copy
+                alert('URL copied to clipboard!');
             })
             .catch(err => {
-                console.error('Error copying URL: ', err); // Error handling
+                console.error('Error copying URL: ', err);
             });
     };
 
     return (
         <div className="flex flex-col mt-16 mb-16">
-            {!linksSaved ? ( // Show link-adding form if links are not saved
-                <div className='ml-10'>
-                    <p className='text-3xl font-semibold'>Now, let&apos;s add your social media</p>
-                    <p className='text-3xl font-semibold'>accounts to your page.</p>
-                    
-                    <form onSubmit={handleSubmit} className="links">
-                        {Object.keys(socialLinks).map((key) => (
-                            <div className="linkItem flex items-center mt-5" key={key}>
-                                <img src={`/${key}.png`} alt={key} /> 
-                                <input
-                                    name={key}
-                                    className='ml-2 border p-2 rounded'
-                                    type="text"
-                                    value={socialLinks[key as keyof SocialLinks]} 
-                                    onChange={handleChange}
-                                    placeholder={`Your ${key}`}
-                                />
-                            </div>
-                        ))}
+            {!linksSaved ? (
+                isOwner ? (
+                    <div className='ml-10'>
+                        <p className='text-3xl font-semibold'>Now, let&apos;s add your social media</p>
+                        <p className='text-3xl font-semibold'>accounts to your page.</p>
+                        
+                        <form onSubmit={handleSubmit} className="links">
+                            {Object.keys(socialLinks).map((key) => (
+                                <div className="linkItem flex items-center mt-5" key={key}>
+                                    <img src={`/${key}.png`} alt={key} /> 
+                                    <input
+                                        name={key}
+                                        className='ml-2 border p-2 rounded'
+                                        type="text"
+                                        value={socialLinks[key as keyof SocialLinks]} 
+                                        onChange={handleChange}
+                                        placeholder={`Your ${key}`}
+                                    />
+                                </div>
+                            ))}
 
-                        <button 
-                            type="submit" 
-                            className="copybtn text-white mt-4"
-                            disabled={isSubmitting} 
-                        >
-                            {isSubmitting ? 'Saving...' : 'Save Links'}
-                        </button>
+                            <button 
+                                type="submit" 
+                                className="copybtn text-white mt-4"
+                                disabled={isSubmitting} 
+                            >
+                                {isSubmitting ? 'Saving...' : 'Save Links'}
+                            </button>
 
-                        {error && <p className="mt-4 text-red-500">{error}</p>} 
-                    </form>
-                </div>
+                            {error && <p className="mt-4 text-red-500">{error}</p>} 
+                        </form>
+                    </div>
+                ) : (
+                    <p>Loading...</p>
+                )
             ) : (
                 <div className='flex flex-col items-center'>
-                     <div className="flex justify-center mb-10"> 
-      <div className="head flex flex-col items-center">
-        <img src="/logo.png" className="justify-center" alt="Logo" />
-        <p className='text-2xl font-bold mt-3'>Bento</p>
-      </div>
-    </div>
+                    <div className="flex justify-center mb-10"> 
+                        <div className="head flex flex-col items-center">
+                            <img src="/logo.png" className="justify-center" alt="Logo" />
+                            <p className='text-2xl font-bold mt-3'>Bento</p>
+                        </div>
+                    </div>
                     <BentoGrid className="max-w-4xl mx-auto ">
-                        {/* Display user name in a BentoGridItem */}
                         <BentoGridItem
                             title={name}
-                            header= {<Skeleton />}
+                            header={<Skeleton />}
                             icon={<IconClipboardCopy className="h-4 w-4 text-neutral-500" />}
                         />
                         {Object.entries(socialLinks).map(([key, value]) => (
@@ -181,13 +202,14 @@ const LinkPage: React.FC<Params> = ({ params }) => {
                         ))}
                     </BentoGrid>
 
-                    {/* Button to copy the current URL */}
                     <button
                         onClick={copyUrlToClipboard}
-                        className=" copybtn  text-white  "
+                        className="copybtn text-white"
                     >
                         Copy URL
                     </button>
+
+                  
                 </div>
             )}
         </div>
@@ -195,7 +217,7 @@ const LinkPage: React.FC<Params> = ({ params }) => {
 };
 
 const Skeleton = () => (
-    <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-blue-200  "></div>
+    <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-blue-200"></div>
 );
 
 export default LinkPage;
