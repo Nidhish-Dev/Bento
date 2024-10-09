@@ -38,13 +38,14 @@ const LinkPage: React.FC<Params> = ({ params }) => {
     const [isOwner, setIsOwner] = useState(false);
     const [error, setError] = useState<string>(''); 
     const [isSubmitting, setIsSubmitting] = useState(false); 
+    const [loading, setLoading] = useState(true); 
     const router = useRouter();
 
     useEffect(() => {
         const fetchUserDetails = async () => {
-            const token = localStorage.getItem('token'); // Check for the token
+            const token = localStorage.getItem('token');
             if (!token) {
-                router.push('/login'); // Redirect to login if no token
+                router.push('/login');
                 return;
             }
 
@@ -52,19 +53,21 @@ const LinkPage: React.FC<Params> = ({ params }) => {
                 const userDetails = await getCurrentUser();
                 if (userDetails) {
                     setName(userDetails.name);
-                    setIsOwner(userDetails.link === params.link);
+                    // Compare the user link with params link without the leading slash
+                    const userLink = userDetails.link.replace(/^\/+/, ''); // Remove leading slashes
+                    setIsOwner(userLink === params.link); // Compare after removing slashes
                 }
             } catch (error) {
                 console.error('Error fetching user details:', error);
-                setError('Unauthorized access. Please log in.'); // Show error message
-                router.push('/login'); // Redirect to login on error
+                setError('Unauthorized access. Please log in.'); 
+                router.push('/login');
             }
         };
 
         const fetchLinks = async () => {
-            const token = localStorage.getItem('token'); // Check for the token
+            const token = localStorage.getItem('token'); 
             if (!token) {
-                router.push('/login'); // Redirect to login if no token
+                router.push('/login');
                 return;
             }
 
@@ -77,12 +80,17 @@ const LinkPage: React.FC<Params> = ({ params }) => {
                 }
             } catch (error) {
                 console.error('Error fetching links:', error);
-                setError('Failed to fetch links.'); // Show error message
+                setError('Failed to fetch links.'); 
             }
         };
 
-        fetchUserDetails(); 
-        fetchLinks(); 
+        const loadData = async () => {
+            await fetchUserDetails(); 
+            await fetchLinks();
+            setLoading(false); 
+        };
+
+        loadData();
     }, [params.link, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,76 +149,78 @@ const LinkPage: React.FC<Params> = ({ params }) => {
 
     return (
         <div className="flex flex-col mt-16 mb-16">
-            {!linksSaved ? (
-                isOwner ? (
-                    <div className='ml-10'>
-                        <p className='text-3xl font-semibold'>Now, let&apos;s add your social media</p>
-                        <p className='text-3xl font-semibold'>accounts to your page.</p>
-                        
-                        <form onSubmit={handleSubmit} className="links">
-                            {Object.keys(socialLinks).map((key) => (
-                                <div className="linkItem flex items-center mt-5" key={key}>
-                                    <img src={`/${key}.png`} alt={key} /> 
-                                    <input
-                                        name={key}
-                                        className='ml-2 border p-2 rounded'
-                                        type="text"
-                                        value={socialLinks[key as keyof SocialLinks]} 
-                                        onChange={handleChange}
-                                        placeholder={`Your ${key}`}
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                !linksSaved ? (
+                    isOwner ? (
+                        <div className='ml-10'>
+                            <p className='text-3xl font-semibold'>Now, let&apos;s add your social media</p>
+                            <p className='text-3xl font-semibold'>accounts to your page.</p>
+                            
+                            <form onSubmit={handleSubmit} className="links">
+                                {Object.keys(socialLinks).map((key) => (
+                                    <div className="linkItem flex items-center mt-5" key={key}>
+                                        <img src={`/${key}.png`} alt={key} /> 
+                                        <input
+                                            name={key}
+                                            className='ml-2 border p-2 rounded'
+                                            type="text"
+                                            value={socialLinks[key as keyof SocialLinks]} 
+                                            onChange={handleChange}
+                                            placeholder={`Your ${key}`}
+                                        />
+                                    </div>
+                                ))}
+
+                                <button 
+                                    type="submit" 
+                                    className="copybtn text-white mt-4"
+                                    disabled={isSubmitting} 
+                                >
+                                    {isSubmitting ? 'Saving...' : 'Save Links'}
+                                </button>
+
+                                {error && <p className="mt-4 text-red-500">{error}</p>} 
+                            </form>
+                        </div>
+                    ) : (
+                        <p>You do not have permission to edit these links.</p>
+                    )
+                ) : (
+                    <div className='flex flex-col items-center'>
+                        <div className="flex justify-center mb-10"> 
+                            <div className="head flex flex-col items-center">
+                                <img src="/logo.png" className="justify-center" alt="Logo" />
+                                <p className='text-2xl font-bold mt-3'>Bento</p>
+                            </div>
+                        </div>
+                        <BentoGrid className="max-w-4xl mx-auto ">
+                            <BentoGridItem
+                                title={name}
+                                header={<Skeleton />}
+                                icon={<IconClipboardCopy className="h-4 w-4 text-neutral-500" />}
+                            />
+                            {Object.entries(socialLinks).map(([key, value]) => (
+                                <div key={key} onClick={() => window.open(socialMediaUrls[key] + value.slice(1), '_blank')}>
+                                    <BentoGridItem
+                                        title={key.charAt(0).toUpperCase() + key.slice(1)}
+                                        description={`Visit your ${key} profile`}
+                                        header={<img src={`/${key}.png`} alt={key} className="w-10 h-10" />}
+                                        icon={<IconClipboardCopy className="h-4 w-4 text-neutral-500" />}
                                     />
                                 </div>
                             ))}
+                        </BentoGrid>
 
-                            <button 
-                                type="submit" 
-                                className="copybtn text-white mt-4"
-                                disabled={isSubmitting} 
-                            >
-                                {isSubmitting ? 'Saving...' : 'Save Links'}
-                            </button>
-
-                            {error && <p className="mt-4 text-red-500">{error}</p>} 
-                        </form>
+                        <button
+                            onClick={copyUrlToClipboard}
+                            className="copybtn text-white"
+                        >
+                            Copy URL
+                        </button>
                     </div>
-                ) : (
-                    <p>Loading...</p>
                 )
-            ) : (
-                <div className='flex flex-col items-center'>
-                    <div className="flex justify-center mb-10"> 
-                        <div className="head flex flex-col items-center">
-                            <img src="/logo.png" className="justify-center" alt="Logo" />
-                            <p className='text-2xl font-bold mt-3'>Bento</p>
-                        </div>
-                    </div>
-                    <BentoGrid className="max-w-4xl mx-auto ">
-                        <BentoGridItem
-                            title={name}
-                            header={<Skeleton />}
-                            icon={<IconClipboardCopy className="h-4 w-4 text-neutral-500" />}
-                        />
-                        {Object.entries(socialLinks).map(([key, value]) => (
-                            <div key={key} onClick={() => window.open(socialMediaUrls[key] + value.slice(1), '_blank')}>
-                                <BentoGridItem
-                                    title={key.charAt(0).toUpperCase() + key.slice(1)}
-                                    description={`Visit your ${key} profile`}
-                                    header={<img src={`/${key}.png`} alt={key} className="w-10 h-10" />}
-                                    icon={<IconClipboardCopy className="h-4 w-4 text-neutral-500" />}
-                                />
-                            </div>
-                        ))}
-                    </BentoGrid>
-
-                    <button
-                        onClick={copyUrlToClipboard}
-                        className="copybtn text-white"
-                    >
-                        Copy URL
-                    </button>
-
-                  
-                </div>
             )}
         </div>
     );
