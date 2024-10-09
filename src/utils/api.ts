@@ -56,7 +56,15 @@ export const getLinks = async (link: string): Promise<SocialLinksWithOwner | nul
     }
 };
 
-export const updateUserDetails = async (details: any) => {
+// Define UserDetails interface for better type safety
+export interface UserDetails {
+    name?: string;
+    email?: string;
+    password?: string;
+    // Add other relevant fields as needed
+}
+
+export const updateUserDetails = async (details: UserDetails) => {
     const token = localStorage.getItem('token');
     await axios.put(`${API_URL}update`, details, {
       headers: { Authorization: `Bearer ${token}` }
